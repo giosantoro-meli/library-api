@@ -1,20 +1,24 @@
 package com.example.library.api.resource;
 
 import com.example.library.api.dto.BookDTO;
+import com.example.library.entities.Book;
+import com.example.library.service.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,12 +34,17 @@ public class BookControllerTest {
     @Autowired
     MockMvc mvc;
 
+    @MockBean //creates a mocked instance
+    BookService service;
+
     @Test
     @DisplayName("Must create a book successfully")
     public void createBookTest() throws Exception{
 
-        BookDTO bookDTO = BookDTO.builder().author("Herman Melville").id(1L).title("Moby Dick").isbn("9788575036709").build();
+        BookDTO bookDTO = BookDTO.builder().author("Herman Melville").title("Moby Dick").isbn("9788575036709").build();
+        Book savedBook = Book.builder().author("Herman Melville").id(1L).title("Moby Dick").isbn("9788575036709").build();
 
+        BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(savedBook);
         String json = new ObjectMapper().writeValueAsString(bookDTO);
 
         MockHttpServletRequestBuilder content = MockMvcRequestBuilders
@@ -47,7 +56,7 @@ public class BookControllerTest {
         mvc
                 .perform(content)
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("id").isNotEmpty())
+                .andExpect(jsonPath("id").value(savedBook.getId()))
                 .andExpect(jsonPath("title").value(bookDTO.getTitle()))
                 .andExpect(jsonPath("author").value(bookDTO.getAuthor()))
                 .andExpect(jsonPath("isbn").value(bookDTO.getIsbn()));
