@@ -1,8 +1,10 @@
 package com.example.library.service;
 
 import com.example.library.entities.Book;
+import com.example.library.exceptions.BusinessException;
 import com.example.library.repository.BookRepository;
 import com.example.library.service.impl.BookServiceImpl;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,7 @@ public class BookServiceTest {
     @Test
     @DisplayName("Must save a new book")
     public void SaveBookTest(){
-        Book book = Book.builder().isbn("123").author("Fulano").title("As aventuras").build();
+        Book book = buildBook();
         Mockito.when(repository.save(book)).thenReturn(
                 Book.builder().id(1L)
                         .isbn("123")
@@ -46,4 +48,27 @@ public class BookServiceTest {
        assertThat(savedBook.getAuthor()).isEqualTo("Fulano");
        assertThat(savedBook.getTitle()).isEqualTo("As aventuras");
     }
+
+    @Test
+    @DisplayName("Must throw new Business Exception when Isbn sent is duplicated")
+    public void shouldNotSaveBookWithRepeatedIsbn(){
+        Book book = buildBook();
+        Mockito.when(repository.existsByIsbn(Mockito.anyString())).thenReturn(true);
+
+        Throwable throwable = Assertions.catchThrowable(() -> service.save(book));
+
+        //verification one
+        assertThat(throwable)
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("Isbn already taken");
+
+        //verification two
+        Mockito.verify(repository, Mockito.never()).save(book);
+
+    }
+
+    private Book buildBook() {
+        return Book.builder().isbn("123").author("Fulano").title("As aventuras").build();
+    }
+
 }
