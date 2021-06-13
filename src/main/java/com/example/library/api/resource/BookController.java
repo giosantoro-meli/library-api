@@ -3,6 +3,7 @@ package com.example.library.api.resource;
 import com.example.library.api.dto.BookDTO;
 import com.example.library.api.exceptions.ApiErrors;
 import com.example.library.entities.Book;
+import com.example.library.exceptions.BusinessException;
 import com.example.library.service.BookService;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -38,5 +39,11 @@ public class BookController {
         BindingResult bindingResult = e.getBindingResult();
 
         return new ApiErrors(bindingResult);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiErrors handleBusinessExceptions(BusinessException e){
+        return new ApiErrors(e);
     }
 }

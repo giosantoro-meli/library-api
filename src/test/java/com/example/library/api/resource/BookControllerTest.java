@@ -2,7 +2,9 @@ package com.example.library.api.resource;
 
 import com.example.library.api.dto.BookDTO;
 import com.example.library.entities.Book;
+import com.example.library.exceptions.BusinessException;
 import com.example.library.service.BookService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +26,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,7 +49,7 @@ public class BookControllerTest {
     @DisplayName("Must create a book successfully")
     public void createBookTest() throws Exception{
 
-        BookDTO bookDTO = BookDTO.builder().author("Herman Melville").title("Moby Dick").isbn("9788575036709").build();
+        BookDTO bookDTO = buildBook();
         Book savedBook = Book.builder().author("Herman Melville").id(1L).title("Moby Dick").isbn("9788575036709").build();
 
         BDDMockito.given(service.save(Mockito.any(Book.class))).willReturn(savedBook);
@@ -82,5 +85,32 @@ public class BookControllerTest {
         mvc.perform(content)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("errors", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Must throw exception if the ISBN is the same of another book")
+    public void createBookWithRepeatedIsbn() throws Exception {
+
+        String json = new ObjectMapper().writeValueAsString(buildBook());
+
+        String errorMessage = "Isbn already taken";
+
+        BDDMockito.given(service.save(Mockito.any(Book.class)))
+                .willThrow(new BusinessException(errorMessage));
+
+        MockHttpServletRequestBuilder content = MockMvcRequestBuilders
+                .post(BOOK_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mvc.perform(content)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errors", hasSize(1)))
+                .andExpect(jsonPath("errors[0]").value(errorMessage));
+    }
+
+    private BookDTO buildBook() {
+        return BookDTO.builder().author("Herman Melville").title("Moby Dick").isbn("9788575036709").build();
     }
 }
