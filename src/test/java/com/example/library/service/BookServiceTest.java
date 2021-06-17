@@ -94,6 +94,26 @@ public class BookServiceTest {
         assertThat(book.isPresent()).isFalse();
     }
 
+    @Test
+    @DisplayName("Must delete a book with the informed id")
+    public void deleteBookTest(){
+        Book book = Book.builder().id(1L).build();
+
+        service.delete(book);
+
+        Mockito.verify(repository, Mockito.times(1)).delete(book);
+    }
+
+    @Test
+    @DisplayName("Must throw exceptions when trying to delete non-existent book")
+    public void deleteNonExistentBookTest(){
+       Book book = new Book();
+
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class ,() -> service.delete(book));
+
+        Mockito.verify(repository, Mockito.never()).delete(book);
+    }
+
     private Book buildBook() {
         return Book.builder().isbn("123").author("Fulano").title("As aventuras").build();
     }
