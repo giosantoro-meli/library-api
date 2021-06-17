@@ -57,4 +57,28 @@ public class BookRepositoryTest {
     private Book buildBook(String isbn) {
         return Book.builder().title("As aventuras").author("Fulano").isbn(isbn).build();
     }
+
+    @Test
+    @DisplayName("Must save a new book")
+    public void saveBookTest(){
+        Book book = buildBook("123");
+        Book savedBook = repository.save(book);
+
+        assertThat(savedBook.getId()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Must delete a saved book")
+    public void deleteBookTest(){
+        Book book = buildBook("123");
+        entityManager.persist(book);
+
+        Book foundBook = entityManager.find(Book.class, book.getId());
+
+        repository.delete(foundBook);
+
+        Book deletedBook = entityManager.find(Book.class, book.getId());
+
+        assertThat(deletedBook).isNull();
+    }
 }
