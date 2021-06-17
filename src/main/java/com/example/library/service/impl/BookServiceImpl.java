@@ -4,6 +4,8 @@ import com.example.library.entities.Book;
 import com.example.library.exceptions.BusinessException;
 import com.example.library.repository.BookRepository;
 import com.example.library.service.BookService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -47,4 +49,10 @@ public class BookServiceImpl implements BookService {
         }
         return repository.save(book);
     }
+
+    @Override
+    public Page<Book> find(Book book, Pageable page) {
+        return null;
+    }
+
 }
