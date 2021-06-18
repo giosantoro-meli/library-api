@@ -1,5 +1,6 @@
 package com.example.library.service;
 
+import com.example.library.api.dto.BookDTO;
 import com.example.library.entities.Book;
 import com.example.library.exceptions.BusinessException;
 import com.example.library.repository.BookRepository;
@@ -11,9 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,17 +127,17 @@ public class BookServiceTest {
         Long id = 1L;
         Book updatingBook = Book.builder().id(id).build();
 
-        Book updateBook = buildBook();
-        updateBook.setId(1L);
+        Book updatedBook = buildBook();
+        updatedBook.setId(1L);
 
-        Mockito.when(repository.save(updatingBook)).thenReturn(updateBook);
+        Mockito.when(repository.save(updatingBook)).thenReturn(updatedBook);
 
         Book book = service.update(updatingBook);
 
-        assertThat(book.getId()).isEqualTo(updateBook.getId());
-        assertThat(book.getIsbn()).isEqualTo(updateBook.getIsbn());
-        assertThat(book.getTitle()).isEqualTo(updateBook.getTitle());
-        assertThat(book.getAuthor()).isEqualTo(updateBook.getAuthor());
+        assertThat(book.getId()).isEqualTo(updatedBook.getId());
+        assertThat(book.getIsbn()).isEqualTo(updatedBook.getIsbn());
+        assertThat(book.getTitle()).isEqualTo(updatedBook.getTitle());
+        assertThat(book.getAuthor()).isEqualTo(updatedBook.getAuthor());
     }
 
     @Test
@@ -141,6 +148,26 @@ public class BookServiceTest {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class ,() -> service.update(book));
 
         Mockito.verify(repository, Mockito.never()).save(book);
+    }
+
+    @Test
+    @DisplayName("Must filter books by the URL parameters")
+    public void findBookWithParamsTest(){
+        Book book = buildBook();
+
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        List<Book> list = Arrays.asList(book);
+
+        Page<Book> page = new PageImpl<Book>(list, pageRequest, 1);
+
+        Mockito.when(repository.findAll(Mockito.any(Example.class), Mockito.any(PageRequest.class))).thenReturn(page);
+
+        Page<Book> result = service.find(book, pageRequest);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).isEqualTo(list);
+        assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
+        assertThat(result.getPageable().getPageSize()).isEqualTo(10);
     }
 
     private Book buildBook() {

@@ -4,6 +4,8 @@ import com.example.library.entities.Book;
 import com.example.library.exceptions.BusinessException;
 import com.example.library.repository.BookRepository;
 import com.example.library.service.BookService;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -52,7 +54,12 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Page<Book> find(Book book, Pageable page) {
-        return null;
+        Example<Book> example = Example.of(book,
+                ExampleMatcher.matching()
+                .withIgnoreCase()
+                .withIgnoreNullValues()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
+        return repository.findAll(example, page);
     }
 
 }
