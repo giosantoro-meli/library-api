@@ -6,6 +6,7 @@ import com.example.library.entities.Loan;
 import com.example.library.service.BookService;
 import com.example.library.service.LoanService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,8 +29,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Properties;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
@@ -37,7 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class LoanControllerTest {
 
-    static String LOAN_API = "/api/loans";
+    static final String LOAN_API = "/api/loans";
+    static final String isbn = "123";
 
     @Autowired
     MockMvc mvc;
@@ -51,10 +52,10 @@ public class LoanControllerTest {
     @Test
     @DisplayName("Must perform a loan")
     public void createLoanTest() throws Exception{
-        String isbn = "123";
+
         LoanDTO dto = LoanDTO.builder().isbn(isbn).customer("Fulano").build();
         String json = new ObjectMapper().writeValueAsString(dto);
-        Book book = Book.builder().isbn(isbn).build();
+        Book book = Book.builder().id(1L).isbn(isbn).build();
         Loan loan = Loan.builder().id(1L).customer("Fulano").book(book).loanDate(LocalDate.now()).build();
 
         BDDMockito.given(bookService.getBookByIsbn(isbn)).willReturn(Optional.of(book));
@@ -68,6 +69,26 @@ public class LoanControllerTest {
         mvc
                 .perform(request)
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("isbn").value("123"));
+                .andExpect( content().string("1") );
+    }
+
+    @Test
+    @DisplayName("Must throw exception saying no book with informed ISBN exists")
+    public void invalidIsbnCreateLoanTest() throws Exception{
+        LoanDTO dto = LoanDTO.builder().isbn(isbn).customer("Fulano").build();
+        String json = new ObjectMapper().writeValueAsString(dto);
+
+        BDDMockito.given(bookService.getBookByIsbn(isbn)).willReturn(Optional.empty());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(LOAN_API)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mvc
+                .perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect( jsonPath("errors", Matchers.hasSize(1)))
+                .andExpect(jsonPath("errors[0]").value("Book not found for passed isbn"));
     }
 }
