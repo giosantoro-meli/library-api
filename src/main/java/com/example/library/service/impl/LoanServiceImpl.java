@@ -32,7 +32,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public Loan update(Loan loan) {
-        loan.setReturned(true);
         return loanRepository.save(loan);
     }
 }
