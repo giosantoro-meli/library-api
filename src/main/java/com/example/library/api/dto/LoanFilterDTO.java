@@ -1,6 +1,5 @@
 package com.example.library.api.dto;
 
-import com.example.library.entities.Book;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoanDTO {
+public class LoanFilterDTO {
     private String isbn;
     private String customer;
-    private BookDTO book;
 }
