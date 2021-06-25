@@ -2,6 +2,7 @@ package com.example.library.service;
 
 import com.example.library.entities.Book;
 import com.example.library.entities.Loan;
+import com.example.library.exceptions.BusinessException;
 import com.example.library.repository.LoanRepository;
 import com.example.library.service.impl.LoanServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +16,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
@@ -58,6 +60,31 @@ public class LoanServiceTest {
         assertThat(loan.getCustomer()).isEqualTo(savedLoan.getCustomer());
         assertThat(loan.getBook().getId()).isEqualTo(savedLoan.getBook().getId());
         assertThat(loan.getLoanDate()).isEqualTo(savedLoan.getLoanDate());
+
+    }
+
+    @Test
+    @DisplayName("Must throw a BusinessException when book is already taken")
+    public void tryToBorrowTakenBookTest(){
+
+        Book book = Book.builder().id(1L).build();
+
+        Loan savingLoan = Loan.builder()
+                .book(book)
+                .customer("Fulano")
+                .id(1L)
+                .loanDate(LocalDate.now())
+                .build();
+
+        when(loanRepository.existsByBookAndNotReturned(book)).thenReturn(true);
+
+        Throwable throwable = catchThrowable(() -> loanService.save(savingLoan));
+
+        assertThat(throwable).isInstanceOf(BusinessException.class)
+            .hasMessage("Book already borrowed");
+
+        verify(loanRepository, never()).save(savingLoan);
+
 
     }
 }
