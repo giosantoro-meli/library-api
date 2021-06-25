@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -67,14 +68,8 @@ public class LoanServiceTest {
     @DisplayName("Must throw a BusinessException when book is already taken")
     public void tryToBorrowTakenBookTest(){
 
-        Book book = Book.builder().id(1L).build();
-
-        Loan savingLoan = Loan.builder()
-                .book(book)
-                .customer("Fulano")
-                .id(1L)
-                .loanDate(LocalDate.now())
-                .build();
+        Loan savingLoan = createLoan();
+        Book book = savingLoan.getBook();
 
         when(loanRepository.existsByBookAndNotReturned(book)).thenReturn(true);
 
@@ -84,7 +79,37 @@ public class LoanServiceTest {
             .hasMessage("Book already borrowed");
 
         verify(loanRepository, never()).save(savingLoan);
+    }
 
+    @Test
+    @DisplayName("Must return a loan by its id")
+    public void getLoanByIdTest(){
+        Long id = 1L;
 
+        Loan loan = createLoan();
+        loan.setId(id);
+
+        when(loanRepository.findById(id)).thenReturn(Optional.of(loan));
+
+        Optional<Loan> result = loanService.getById(id);
+
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().getId()).isEqualTo(id);
+        assertThat(result.get().getCustomer()).isEqualTo(loan.getCustomer());
+        assertThat(result.get().getBook()).isEqualTo(loan.getBook());
+        assertThat(result.get().getLoanDate()).isEqualTo(loan.getLoanDate());
+
+        verify(loanRepository).findById(id);
+    }
+
+    public static Loan createLoan(){
+        Book book = Book.builder().id(1L).build();
+
+        return Loan.builder()
+                .book(book)
+                .customer("Fulano")
+                .id(1L)
+                .loanDate(LocalDate.now())
+                .build();
     }
 }
