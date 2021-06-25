@@ -13,13 +13,17 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table
+@Entity
 public class Loan {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String customer;
     private LocalDate loanDate;
+
+    @JoinColumn(name = "book_id")
+    @ManyToOne
     private Book book;
     private Boolean returned;
 }
