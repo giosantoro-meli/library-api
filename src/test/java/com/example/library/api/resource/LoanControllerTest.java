@@ -1,11 +1,13 @@
 package com.example.library.api.resource;
 
 import com.example.library.api.dto.LoanDTO;
+import com.example.library.api.dto.ReturnedLoanDTO;
 import com.example.library.entities.Book;
 import com.example.library.entities.Loan;
 import com.example.library.exceptions.BusinessException;
 import com.example.library.service.BookService;
 import com.example.library.service.LoanService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -30,6 +33,9 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Properties;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -115,5 +121,25 @@ public class LoanControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect( jsonPath("errors", Matchers.hasSize(1)))
                 .andExpect(jsonPath("errors[0]").value("Book already borrowed"));
+    }
+
+    @Test
+    @DisplayName("Must return a borrowed book")
+    public void returnBookTest() throws Exception {
+        ReturnedLoanDTO dto = ReturnedLoanDTO.builder().returned(true).build();
+        Loan loan = Loan.builder().id(1L).build();
+        BDDMockito.given(loanService.getById(Mockito.anyLong()))
+                .willReturn(Optional.of(loan));
+
+        String json = new ObjectMapper().writeValueAsString(dto);
+
+        mvc.perform(
+                patch(LOAN_API.concat("/1"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json)
+        ).andExpect(status().isOk());
+
+        verify(loanService, times(1)).update(loan);
     }
 }

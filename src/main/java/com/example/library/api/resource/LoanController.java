@@ -1,6 +1,7 @@
 package com.example.library.api.resource;
 
 import com.example.library.api.dto.LoanDTO;
+import com.example.library.api.dto.ReturnedLoanDTO;
 import com.example.library.entities.Book;
 import com.example.library.entities.Loan;
 import com.example.library.service.BookService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/loans")
@@ -39,5 +41,14 @@ public class LoanController {
         entity = loanService.save(entity);
 
         return entity.getId();
+    }
+
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void returnBook(@PathVariable Long id, @RequestBody ReturnedLoanDTO dto){
+        Loan loan = loanService.getById(id).get();
+        loan.setReturned(dto.getReturned());
+
+        loanService.update(loan);
     }
 }
