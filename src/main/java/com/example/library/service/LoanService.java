@@ -1,6 +1,7 @@
 package com.example.library.service;
 
 import com.example.library.api.dto.LoanFilterDTO;
+import com.example.library.entities.Book;
 import com.example.library.entities.Loan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,4 +16,6 @@ public interface LoanService {
     Loan update(Loan loan);
 
     Page<Loan> find(LoanFilterDTO filter, Pageable pageable);
+
+    Page<Loan> getLoansByBook(Book book, Pageable pageable);
 }

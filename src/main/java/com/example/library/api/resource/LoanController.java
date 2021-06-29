@@ -8,6 +8,7 @@ import com.example.library.entities.Book;
 import com.example.library.entities.Loan;
 import com.example.library.service.BookService;
 import com.example.library.service.LoanService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/loans")
+@RequiredArgsConstructor
 public class LoanController {
 
     private final LoanService loanService;
@@ -29,12 +31,6 @@ public class LoanController {
     private final BookService bookService;
 
     private final ModelMapper modelMapper;
-
-    public LoanController(LoanService loanService, BookService bookService, ModelMapper modelMapper) {
-        this.loanService = loanService;
-        this.bookService = bookService;
-        this.modelMapper = modelMapper;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
