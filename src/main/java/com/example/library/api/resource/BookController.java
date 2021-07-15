@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @RequestMapping(value = "/api/books")
 @RequiredArgsConstructor
 @Api("Book API")
+@Slf4j
 public class BookController {
 
     private final BookService service;
@@ -37,6 +39,7 @@ public class BookController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation("Create a book")
     public BookDTO create(@RequestBody @Valid BookDTO bookDTO){
+        log.info("creating a book for isbn: {}", bookDTO.getIsbn());
         Book book = modelMapper.map(bookDTO, Book.class);
         book = service.save(book);
         return modelMapper.map(book, BookDTO.class);
@@ -45,6 +48,7 @@ public class BookController {
     @GetMapping(value = "{id}")
     @ApiOperation("Gets a book's details by id")
     public BookDTO getById(@PathVariable Long id){
+        log.info("obtaining details for book with id {}", id);
         return service
                 .getById(id)
                 .map(book -> modelMapper.map(book, BookDTO.class))
@@ -61,6 +65,7 @@ public class BookController {
             }
     )
     public void delete(@PathVariable Long id){
+        log.info("deleting book with id {}", id);
         Book book = service.getById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         service.delete(book);
     }
