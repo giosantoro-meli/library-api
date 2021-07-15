@@ -20,6 +20,9 @@ public class Loan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String customer;
+
+    @Column(name="customer_email")
+    private String customerEmail;
     private LocalDate loanDate;
 
     @JoinColumn(name = "book_id")
